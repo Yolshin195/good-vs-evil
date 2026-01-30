@@ -1,15 +1,19 @@
+use axum::{
+    http::{StatusCode},
+    response::sse::{Event, Sse},
+    response::{Html, IntoResponse, Response, Json},
+    routing::get,
+    Router,
+};
 use askama::Template;
 use std::sync::{atomic, Arc};
-use axum::{
-    Router,
-    response::Json,
-    extract::State,
-};
-use axum::http::{StatusCode};
-use axum::response::{Html, IntoResponse, Response};
-use axum::routing::get;
 use serde::Serialize;
-
+use axum_extra::TypedHeader;
+use futures_util::stream::Stream;
+use std::{convert::Infallible,time::Duration};
+use axum::extract::State;
+use serde_json::to_string;
+use tokio_stream::StreamExt as _;
 
 #[derive(Template)]
 #[template(path = "index-grok-v1.html")]
@@ -66,28 +70,35 @@ impl AppState {
 
 #[tokio::main]
 async fn main() {
-    let state: Arc<AppState> = Arc::new(AppState::default());
 
-    let api_v1 = Router::new()
-        .route("/state", get(get_state))
-        .route("/tap/good", get(tap_good))
-        .route("/tap/evil", get(tap_evil));
-    
-    
-    let templates_router = Router::new()
-        .route("/", get(handler_index));
-    
-    let app = Router::new()
-        .merge(templates_router)
-        .nest("/api/v1", api_v1)
-        .with_state(state);
-    
+    let app = app();
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3500")
         .await
         .unwrap();
 
     axum::serve(listener, app).await.unwrap();
+}
+
+fn app() -> Router {
+    let state: Arc<AppState> = Arc::new(AppState::default());
+
+    let api_v1 = Router::new()
+        .route("/state", get(get_state))
+        .route("/tap/good", get(tap_good))
+        .route("/tap/evil", get(tap_evil));
+
+
+    let templates_router = Router::new()
+        .route("/", get(handler_index))
+        .route("/sse", get(sse_handler));
+
+    let app = Router::new()
+        .merge(templates_router)
+        .nest("/api/v1", api_v1)
+        .with_state(state);
+
+    app
 }
 
 async fn handler_index() -> impl IntoResponse {
@@ -111,4 +122,29 @@ async fn tap_evil(
 ) -> Json<StateDto> {
     state.tap_evil();
     Json(state.snapshot())
+}
+
+async fn sse_handler(
+    TypedHeader(user_agent): TypedHeader<headers::UserAgent>,
+    State(state): State<Arc<AppState>>
+) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
+    println!("`{}` connected", user_agent.as_str());
+
+    // A `Stream` that repeats an event every second
+    //
+    // You can also create streams from tokio channels using the wrappers in
+    // https://docs.rs/tokio-stream
+    let stream = tokio_stream::wrappers::IntervalStream::new(
+        tokio::time::interval(Duration::from_secs(1)),
+    )
+    .map(move |_| {
+        match to_string(&state.snapshot()) {
+            Ok(json) => Event::default().event("state").data(json),
+            Err(_) => Event::default().event("error").data("{}"),
+        }
+    })
+    .map(Ok);
+
+    
+    Sse::new(stream)
 }

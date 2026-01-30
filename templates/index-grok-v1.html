@@ -422,6 +422,13 @@
 
     // Можно раскомментировать для периодического обновления (например каждые 10 секунд)
     // setInterval(loadState, 10000);
+
+    let eventSource = new EventSource('sse');
+
+    eventSource.addEventListener('state', (event) => {
+        const state = JSON.parse(event.data);
+        updateUI(state.good, state.evil);
+    });
 </script>
 </body>
 </html>
