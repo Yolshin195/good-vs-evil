@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GOOD vs EVIL</title>
+    <style>
+        :root {
+            --bg: #000;
+            --text: #fff;
+            --evil: #c41e3a;
+            --good: #00ff9d;
+            --evil-glow: rgba(196, 30, 58, 0.7);
+            --good-glow: rgba(0, 255, 157, 0.7);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            touch-action: manipulation;
+            user-select: none;
+        }
+
+        body {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            padding: 2vh 5vw 1vh;
+            z-index: 5;
+        }
+
+        h1 {
+            font-size: clamp(2.8rem, 9vw, 7.5rem);
+            font-weight: 900;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, var(--evil), var(--good), var(--evil));
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 30px rgba(255,255,255,0.1);
+        }
+
+        .subtitle {
+            font-size: clamp(1rem, 3.8vw, 1.6rem);
+            opacity: 0.75;
+            font-weight: 300;
+            letter-spacing: 0.1em;
+            margin-top: 0.3vh;
+        }
+
+        .main-content {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .vs-symbol {
+            position: absolute;
+            inset: 0;
+            margin: auto;
+            width: fit-content;
+            height: fit-content;
+            font-size: clamp(4rem, 14vw, 11rem);
+            font-weight: 900;
+            opacity: 0.06;
+            pointer-events: none;
+            z-index: 1;
+            color: #fff;
+        }
+
+        .sides {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            z-index: 3;
+        }
+
+        @media (min-width: 768px) {
+            .sides { flex-direction: row; }
+        }
+
+        .side {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2vh 4vw;
+        }
+
+        .side.evil { background: linear-gradient(to bottom, rgba(50,0,0,0.35), transparent 80%); }
+        .side.good { background: linear-gradient(to bottom, rgba(0,60,35,0.35), transparent 80%); }
+
+        .emoji   { font-size: clamp(3.5rem, 12vw, 8rem); margin-bottom: 1vh; }
+        .counter {
+            font-size: clamp(4.5rem, 18vw, 13rem);
+            font-weight: 900;
+            line-height: 0.88;
+            text-shadow: 0 0 50px currentColor;
+        }
+
+        .evil .counter { color: var(--evil); }
+        .good .counter { color: var(--good); }
+
+        .counter.pulse { animation: pulse 0.55s ease-out; }
+        @keyframes pulse {
+            0%   { transform: scale(1); }
+            45%  { transform: scale(1.12); }
+            100% { transform: scale(1); }
+        }
+
+        button {
+            font-size: clamp(1.5rem, 6vw, 3.5rem);
+            font-weight: 800;
+            padding: clamp(0.9rem, 4vw, 2rem) clamp(3.5rem, 10vw, 7rem);
+            margin: 3vh 0 5vh;
+            border: none;
+            border-radius: 999px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.09em;
+            transition: all 0.2s ease-out;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.65);
+            z-index: 4;
+        }
+
+        button.evil-btn {
+            background: var(--evil);
+            color: white;
+            box-shadow: 0 15px 45px var(--evil-glow);
+        }
+
+        button.good-btn {
+            background: var(--good);
+            color: #000;
+            box-shadow: 0 15px 45px var(--good-glow);
+        }
+
+        button:active {
+            transform: scale(0.93) translateY(4px);
+        }
+
+        .balance-container {
+            position: relative;
+            width: 100%;
+            z-index: 5;
+        }
+
+        .balance-bar {
+            height: clamp(10px, 1.4vh, 16px);
+            background: #0f0f0f;
+            border-top: 1px solid #222;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .bar-segment {
+            height: 100%;
+            transition: width 0.6s ease-out;
+        }
+
+        .evil-bar {
+            background: linear-gradient(90deg, #9c0000, var(--evil));
+        }
+
+        .good-bar {
+            background: linear-gradient(90deg, var(--good), #00c270);
+        }
+
+        .percentage-label {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: clamp(0.95rem, 3vw, 1.4rem);
+            font-weight: 700;
+            color: rgba(255,255,255,0.94);
+            text-shadow: 0 0 8px black;
+            pointer-events: none;
+            z-index: 2;
+            padding: 0 2.5vw;
+        }
+
+        .evil-label  { left: 2%; }
+        .good-label  { right: 2%; text-align: right; }
+
+        .effect-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 2;
+            opacity: 0;
+            transition: opacity 1.2s ease;
+        }
+
+        .effect-layer.active {
+            opacity: 1;
+        }
+
+        .blood-rain, .green-particles {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        .blood-drop, .particle {
+            position: absolute;
+            background: currentColor;
+            border-radius: 50%;
+            animation: fall linear infinite;
+        }
+
+        .blood-drop {
+            width: 8px;
+            height: 16px;
+            background: #8b0000;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            box-shadow: 0 0 10px #c41e3a;
+        }
+
+        .particle {
+            width: 6px;
+            height: 6px;
+            background: #00ff9d;
+            box-shadow: 0 0 12px #00ff9d;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-120%) rotate(0deg); opacity: 0.9; }
+            100% { transform: translateY(120vh) rotate(720deg); opacity: 0; }
+        }
+
+        audio { display: none; }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>GOOD vs EVIL</h1>
+    <div class="subtitle">The world is watching.</div>
+</div>
+
+<div class="main-content">
+    <div class="vs-symbol">VS</div>
+
+    <div class="effect-layer evil-effect" id="evilEffect">
+        <div class="blood-rain" id="bloodRain"></div>
+    </div>
+
+    <div class="effect-layer good-effect" id="goodEffect">
+        <div class="green-particles" id="greenParticles"></div>
+    </div>
+
+    <div class="sides">
+        <div class="side evil">
+            <div class="emoji">😈</div>
+            <div class="counter" id="evilCount">0</div>
+            <button class="evil-btn" ontouchstart="tapEvil()" onclick="tapEvil()">TAP EVIL</button>
+        </div>
+
+        <div class="side good">
+            <div class="emoji">😇</div>
+            <div class="counter" id="goodCount">0</div>
+            <button class="good-btn" ontouchstart="tapGood()" onclick="tapGood()">TAP GOOD</button>
+        </div>
+    </div>
+</div>
+
+<div class="balance-container">
+    <div class="balance-bar">
+        <div class="bar-segment evil-bar" id="evilBar" style="width:50%"></div>
+        <div class="bar-segment good-bar" id="goodBar" style="width:50%"></div>
+    </div>
+    <div class="percentage-label evil-label" id="evilPercent">50%</div>
+    <div class="percentage-label good-label" id="goodPercent">50%</div>
+</div>
+
+<!-- Звуки кликов -->
+<audio id="evilSound" preload="auto">
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-evil-laugh-1229.mp3" type="audio/mpeg">
+</audio>
+<audio id="goodSound" preload="auto">
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-magic-sparkle-1403.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+    const API_BASE = '/api/v1';
+
+    const els = {
+        evilCount: document.getElementById('evilCount'),
+        goodCount: document.getElementById('goodCount'),
+        evilBar: document.getElementById('evilBar'),
+        goodBar: document.getElementById('goodBar'),
+        evilPct: document.getElementById('evilPercent'),
+        goodPct: document.getElementById('goodPercent'),
+        evilAudio: document.getElementById('evilSound'),
+        goodAudio: document.getElementById('goodSound'),
+        evilEffect: document.getElementById('evilEffect'),
+        goodEffect: document.getElementById('goodEffect')
+    };
+
+    let dominant = 'neutral';
+
+    function createDrops(containerId, count, className) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+        for (let i = 0; i < count; i++) {
+            const el = document.createElement('div');
+            el.className = className;
+            el.style.left = Math.random() * 100 + '%';
+            el.style.animationDuration = (Math.random() * 4 + 5) + 's';
+            el.style.animationDelay = Math.random() * 8 + 's';
+            if (className === 'particle') {
+                const size = Math.random() * 8 + 5;
+                el.style.width = el.style.height = size + 'px';
+            }
+            container.appendChild(el);
+        }
+    }
+
+    function updateDominant(good, evil) {
+        const total = good + evil || 1;
+        const evilShare = evil / total;
+
+        let newDominant = 'neutral';
+        if (evilShare > 0.6) newDominant = 'evil';
+        else if (evilShare < 0.4) newDominant = 'good';
+
+        if (newDominant !== dominant) {
+            dominant = newDominant;
+
+            els.evilEffect.classList.toggle('active', dominant === 'evil');
+            els.goodEffect.classList.toggle('active', dominant === 'good');
+        }
+    }
+
+    function updateUI(good, evil) {
+        els.evilCount.textContent = evil.toLocaleString();
+        els.goodCount.textContent = good.toLocaleString();
+
+        const total = good + evil || 1;
+        const evilShare = (evil / total * 100).toFixed(1) + '%';
+        const goodShare = (100 - evil / total * 100).toFixed(1) + '%';
+
+        els.evilBar.style.width = evilShare;
+        els.goodBar.style.width = goodShare;
+
+        els.evilPct.textContent = evilShare;
+        els.goodPct.textContent = goodShare;
+
+        els.evilCount.classList.add('pulse');
+        els.goodCount.classList.add('pulse');
+        setTimeout(() => {
+            els.evilCount.classList.remove('pulse');
+            els.goodCount.classList.remove('pulse');
+        }, 550);
+
+        updateDominant(good, evil);
+    }
+
+    async function loadState() {
+        try {
+            const res = await fetch(`${API_BASE}/state`);
+            if (!res.ok) throw new Error('Failed to load state');
+            const data = await res.json();
+            updateUI(data.good, data.evil);
+        } catch (err) {
+            console.error('State load error:', err);
+        }
+    }
+
+    async function tapEvil() {
+        try {
+            els.evilAudio.currentTime = 0;
+            els.evilAudio.play().catch(() => {});
+
+            const res = await fetch(`${API_BASE}/tap/evil`);
+            if (!res.ok) throw new Error('Tap evil failed');
+            const data = await res.json();
+            updateUI(data.good, data.evil);
+        } catch (err) {
+            console.error('Tap evil error:', err);
+        }
+    }
+
+    async function tapGood() {
+        try {
+            els.goodAudio.currentTime = 0;
+            els.goodAudio.play().catch(() => {});
+
+            const res = await fetch(`${API_BASE}/tap/good`);
+            if (!res.ok) throw new Error('Tap good failed');
+            const data = await res.json();
+            updateUI(data.good, data.evil);
+        } catch (err) {
+            console.error('Tap good error:', err);
+        }
+    }
+
+    // Инициализация визуальных эффектов (частицы) один раз
+    createDrops('bloodRain', 50, 'blood-drop');
+    createDrops('greenParticles', 70, 'particle');
+
+    // Загрузка начального состояния с сервера
+    loadState();
+
+    // Можно раскомментировать для периодического обновления (например каждые 10 секунд)
+    // setInterval(loadState, 10000);
+</script>
+</body>
+</html>
