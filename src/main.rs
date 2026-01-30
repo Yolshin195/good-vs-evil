@@ -135,7 +135,7 @@ async fn sse_handler(
     // You can also create streams from tokio channels using the wrappers in
     // https://docs.rs/tokio-stream
     let stream = tokio_stream::wrappers::IntervalStream::new(
-        tokio::time::interval(Duration::from_secs(1)),
+        tokio::time::interval(Duration::from_millis(200)),
     )
     .map(move |_| {
         match to_string(&state.snapshot()) {

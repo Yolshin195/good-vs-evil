@@ -351,8 +351,18 @@
     }
 
     function updateUI(good, evil) {
-        els.evilCount.textContent = evil.toLocaleString();
-        els.goodCount.textContent = good.toLocaleString();
+        const evilText = evil.toLocaleString();
+        const goodText = good.toLocaleString();
+
+        if (
+            els.evilCount.textContent === evilText &&
+            els.goodCount.textContent === goodText
+        ) {
+            return;
+        }
+
+        els.evilCount.textContent = evilText;
+        els.goodCount.textContent = goodText;
 
         const total = good + evil || 1;
         const evilShare = (evil / total * 100).toFixed(1) + '%';
